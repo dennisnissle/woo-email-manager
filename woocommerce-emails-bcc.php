@@ -22,27 +22,27 @@ if ( ! class_exists( 'WooCommerce_Emails_BCC' ) ) :
 final class WooCommerce_Emails_BCC {
 
 	/**
-	 * Current WooCommerce Germanized Version
+	 * Current WooCommerce Emails BCC Version
 	 *
 	 * @var string
 	 */
 	public $version = '1.0.0';
 
 	/**
-	 * Single instance of WooCommerce Germanized Main Class
+	 * Single instance of WooCommerce Emails BCC Main Class
 	 *
 	 * @var object
 	 */
 	protected static $_instance = null;
 
 	/**
-	 * Main WooCommerceGermanized Instance
+	 * Main WooCommerce Emails BCC Instance
 	 *
-	 * Ensures that only one instance of WooCommerceGermanized is loaded or can be loaded.
+	 * Ensures that only one instance of WooCommerce Emails BCC is loaded or can be loaded.
 	 *
 	 * @static
-	 * @see WC_germanized()
-	 * @return WooCommerceGermanized - Main instance
+	 * @see WC_emails_bcc()
+	 * @return WooCommerce_Emails_BCC - Main instance
 	 */
 	public static function instance() {
 		if ( is_null( self::$_instance ) )
@@ -79,7 +79,7 @@ final class WooCommerce_Emails_BCC {
 	}
 
 	/**
-	 * adds some initialization hooks and inits WooCommerce Germanized
+	 * adds some initialization hooks and inits WooCommerce Emails BCC
 	 */
 	public function __construct() {
 
@@ -92,13 +92,6 @@ final class WooCommerce_Emails_BCC {
 		add_action( 'woocommerce_email', array( $this, 'init_email_fields' ), 10, 1 );
 		add_filter( 'woocommerce_email_headers', array( $this, 'set_email_headers' ), 10, 3 );
 
-	}
-
-	/**
-	 * Init WooCommerceGermanized when WordPress initializes.
-	 */
-	public function init() {
-		
 	}
 
 	public function set_email_headers( $headers, $id, $object ) {
@@ -184,9 +177,9 @@ final class WooCommerce_Emails_BCC {
 	 * Note: the first-loaded translation file overrides any following ones if the same translation is present.
 	 *
 	 * Frontend/global Locales found in:
-	 * 		- WP_LANG_DIR/woocommerce-germanized/woocommerce-germanized-LOCALE.mo
-	 * 	 	- woocommerce-germanized/i18n/languages/woocommerce-germanized-LOCALE.mo (which if not found falls back to:)
-	 * 	 	- WP_LANG_DIR/plugins/woocommerce-germanized-LOCALE.mo
+	 * 		- WP_LANG_DIR/woocommerce-emails-bcc/woocommerce-emails-bcc-LOCALE.mo
+	 * 	 	- woocommerce-emails-bcc/languages/woocommerce-emails-bcc-LOCALE.mo (which if not found falls back to:)
+	 * 	 	- WP_LANG_DIR/plugins/woocommerce-emails-bcc-LOCALE.mo
 	 */
 	public function load_plugin_textdomain() {
 		$domain = 'woocommerce-emails-bcc';
@@ -201,7 +194,7 @@ final class WooCommerce_Emails_BCC {
 endif;
 
 /**
- * Returns the global instance of WooCommerce Germanized
+ * Returns the global instance of WooCommerce Emails BCC
  */
 function WC_emails_bcc() {
 	return WooCommerce_Emails_BCC::instance();
