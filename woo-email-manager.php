@@ -1,15 +1,15 @@
 <?php
 /**
- * Plugin Name: WooCommerce Emails BCC
- * Plugin URI: https://wordpress.org/plugins/woocommerce-emails-bcc
- * Description: Easily receive blind copies of emails sent to your customers by defining BCC email addresses for every email template.
+ * Plugin Name: Woo Email Manager
+ * Plugin URI: https://wordpress.org/plugins/woo-emails-manager
+ * Description: Manage WooCommerce email texts and set BCC email addresses for every WooCommerce template
  * Version: 1.0.0
  * Author: Vendidero
  * Author URI: https://vendidero.de
  * Requires at least: 3.8
  * Tested up to: 4.2
  *
- * Text Domain: woocommerce-emails-bcc
+ * Text Domain: woo-email-manager
  * Domain Path: /languages/
  *
  * @author Vendidero
@@ -17,9 +17,9 @@
 if ( ! defined( 'ABSPATH' ) )
 	exit; // Exit if accessed directly
 
-if ( ! class_exists( 'WooCommerce_Emails_BCC' ) ) :
+if ( ! class_exists( 'Woo_Email_Manager' ) ) :
 
-final class WooCommerce_Emails_BCC {
+final class Woo_Email_Manager {
 
 	/**
 	 * Current WooCommerce Emails BCC Version
@@ -56,7 +56,7 @@ final class WooCommerce_Emails_BCC {
 	 * @since 1.0
 	 */
 	public function __clone() {
-		_doing_it_wrong( __FUNCTION__, __( 'Cheatin&#8217; huh?', 'woocommerce-emails-bcc' ), '1.0' );
+		_doing_it_wrong( __FUNCTION__, __( 'Cheatin&#8217; huh?', 'woo-email-manager' ), '1.0' );
 	}
 
 	/**
@@ -65,7 +65,7 @@ final class WooCommerce_Emails_BCC {
 	 * @since 1.0
 	 */
 	public function __wakeup() {
-		_doing_it_wrong( __FUNCTION__, __( 'Cheatin&#8217; huh?', 'woocommerce-emails-bcc' ), '1.0' );
+		_doing_it_wrong( __FUNCTION__, __( 'Cheatin&#8217; huh?', 'woo-email-manager' ), '1.0' );
 	}
 
 	/**
@@ -119,14 +119,75 @@ final class WooCommerce_Emails_BCC {
 	public function init_email_fields( $mailer ) {		
 		$mails = $mailer->get_emails();
 		foreach ( $mails as $mail ) {
+
+			$gettexts = $this->get_text_data( $mail );
+
 			$mail->form_fields[ 'bcc' ] = array(
-				'title'         => __( 'BCC', 'woocommerce-emails-bcc' ),
+				'title'         => __( 'BCC', 'woo-email-manager' ),
 				'type'          => 'text',
-				'description'   => __( 'Seperate multiple email addresses by comma', 'woocommerce-emails-bcc' ),
+				'description'   => __( 'Seperate multiple email addresses by comma', 'woo-email-manager' ),
 				'placeholder'   => '',
 				'default'       => ''
 			);
+
+			$count = 0;
+
+			foreach ( $gettexts as $gettext ) {
+
+				$mail->form_fields[ 'text_' . md5( $gettext[ 'text' ] ) ] = array(
+					'title'         => sprintf( __( 'Text %d', 'woo-email-manager' ), ++$count ),
+					'type'          => 'textarea',
+					'description'   => sprintf( __( 'Default: %s', 'woo-email-manager' ), __( $gettext[ 'text' ], $gettext[ 'textdomain' ] ) ),
+					'placeholder'   => '',
+					'default'       => ''
+				);
+
+			}
+
 		}
+	}
+
+	public function get_text_data( $mail ) {
+		
+		if ( $text_data = get_transient( 'woo_email_manager_text_' . $mail->id ) ) {
+			return $text_data;
+		}
+
+		$template = $mail->template_html;
+		
+		if ( $mail->get_option( 'type' ) === 'plain' )
+			$template = $mail->template_plain;
+
+		$template_file = wc_locate_template( $template );
+
+		// Parse text in email
+		$file = fopen( $template_file, 'r' );
+		$content = '';
+
+		if ( $file )
+			$content = fread( $file, filesize( $template_file ) );
+
+		$gettexts = array();
+
+		if ( ! empty( $content ) ) {
+			preg_match_all( "/printf\(( ?)__\(.*?\)/", $content, $matches );
+			if ( ! empty( $matches[0] ) ) {
+				foreach ( $matches[0] as $string ) {
+					$string = explode( "'", $string );
+					if ( isset( $string[1] ) && isset( $string[3] ) ) {
+						$gettexts[] = array( 
+							'text' => trim( $string[1] ), 
+							'textdomain' => trim( $string[3] ), 
+						);
+					}
+				}
+			}
+		}
+
+		set_transient( 'woo_email_manager_text_' . $mail->id, $gettexts, WEEK_IN_SECONDS );
+
+		return $gettexts;
+
 	}
 
 	/**
@@ -160,8 +221,8 @@ final class WooCommerce_Emails_BCC {
 	 * Define WC_Germanized Constants
 	 */
 	private function define_constants() {
-		define( 'WC_EMAILS_BCC_PLUGIN_FILE', __FILE__ );
-		define( 'WC_EMAILS_BCC_VERSION', $this->version );
+		define( 'WOO_EMAIL_MANAGER_PLUGIN_FILE', __FILE__ );
+		define( 'WOO_EMAIL_MANAGER_VERSION', $this->version );
 	}
 
 	/**
@@ -177,12 +238,12 @@ final class WooCommerce_Emails_BCC {
 	 * Note: the first-loaded translation file overrides any following ones if the same translation is present.
 	 *
 	 * Frontend/global Locales found in:
-	 * 		- WP_LANG_DIR/woocommerce-emails-bcc/woocommerce-emails-bcc-LOCALE.mo
-	 * 	 	- woocommerce-emails-bcc/languages/woocommerce-emails-bcc-LOCALE.mo (which if not found falls back to:)
-	 * 	 	- WP_LANG_DIR/plugins/woocommerce-emails-bcc-LOCALE.mo
+	 * 		- WP_LANG_DIR/woo-email-manager/woo-email-manager-LOCALE.mo
+	 * 	 	- woo-email-manager/languages/woo-email-manager-LOCALE.mo (which if not found falls back to:)
+	 * 	 	- WP_LANG_DIR/plugins/woo-email-manager-LOCALE.mo
 	 */
 	public function load_plugin_textdomain() {
-		$domain = 'woocommerce-emails-bcc';
+		$domain = 'woo-email-manager';
 		$locale = apply_filters( 'plugin_locale', get_locale(), $domain );
 
 		load_textdomain( $domain, trailingslashit( WP_LANG_DIR ) . $domain . '/' . $domain . '-' . $locale . '.mo' );
@@ -196,9 +257,9 @@ endif;
 /**
  * Returns the global instance of WooCommerce Emails BCC
  */
-function WC_emails_bcc() {
-	return WooCommerce_Emails_BCC::instance();
+function woo_email_manager() {
+	return Woo_Email_Manager::instance();
 }
 
-$GLOBALS['woocommerce_emails_bcc'] = WC_emails_bcc();
+$GLOBALS['woo_email_manager'] = woo_email_manager();
 ?>
