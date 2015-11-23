@@ -7,7 +7,7 @@
  * Author: Vendidero
  * Author URI: https://vendidero.de
  * Requires at least: 3.8
- * Tested up to: 4.2
+ * Tested up to: 4.4
  *
  * Text Domain: woo-email-manager
  * Domain Path: /languages/
@@ -107,7 +107,7 @@ final class Woo_Email_Manager {
 				return;
 
 			delete_transient( 'woo_email_manager_text_' . $mail->id );
-			
+
 		}
 
 	}

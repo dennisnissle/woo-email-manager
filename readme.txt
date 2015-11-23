@@ -2,7 +2,7 @@
 Contributors: vendidero
 Tags: woocommerce, emails, bcc, e-mail, woothemes, copy, blind copy
 Requires at least: 3.8
-Tested up to: 4.3
+Tested up to: 4.4
 Stable tag: 1.0.0
 License: GPLv3
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
@@ -29,7 +29,7 @@ Please mind that the number and order of the parameters (e.g. %s or %d) of the o
 
 == Screenshots ==
 
-1. BCC field
+1. BCC & text fields
 
 == Changelog ==
 
