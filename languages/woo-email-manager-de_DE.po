@@ -1,0 +1,108 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: Woo Email Manager v1.0.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: \n"
+"PO-Revision-Date: 2015-11-23 11:30:10+0000\n"
+"Last-Translator: admin <dennis.nissle@iwebix.de>\n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=n != 1;\n"
+"X-Generator: CSL v1.x\n"
+"X-Poedit-Language: German\n"
+"X-Poedit-Country: GERMANY\n"
+"X-Poedit-SourceCharset: utf-8\n"
+"X-Poedit-KeywordsList: __;_e;__ngettext:1,2;_n:1,2;__ngettext_noop:1,2;_n_noop:1,2;_c,_nc:4c,1,2;_x:1,2c;_ex:1,2c;_nx:4c,1,2;_nx_noop:4c,1,2;\n"
+"X-Poedit-Basepath: ../\n"
+"X-Poedit-Bookmarks: \n"
+"X-Poedit-SearchPath-0: .\n"
+"X-Textdomain-Support: yes"
+
+#. translators: plugin header field 'Name'
+#: woo-email-manager.php:0
+#@ woo-email-manager
+msgid "Woo Email Manager"
+msgstr "Woo Email Manager"
+
+#. translators: plugin header field 'PluginURI'
+#: woo-email-manager.php:0
+#@ woo-email-manager
+msgid "https://wordpress.org/plugins/woo-emails-manager"
+msgstr "https://wordpress.org/plugins/woo-emails-manager"
+
+#. translators: plugin header field 'Description'
+#: woo-email-manager.php:0
+#@ woo-email-manager
+msgid "Manage WooCommerce email texts and set BCC email addresses for every WooCommerce template"
+msgstr "Verwalte deine WooCommerce E-Mail Texte und verschicke Kopien bestimmter E-Mails an unterschiedliche Adressen"
+
+#. translators: plugin header field 'Author'
+#: woo-email-manager.php:0
+#@ woo-email-manager
+msgid "Vendidero"
+msgstr "Vendidero"
+
+#. translators: plugin header field 'AuthorURI'
+#: woo-email-manager.php:0
+#@ woo-email-manager
+msgid "https://vendidero.de"
+msgstr "https://vendidero.de"
+
+#. translators: plugin header field 'Version'
+#: woo-email-manager.php:0
+#@ woo-email-manager
+msgid "1.0.0"
+msgstr "1.0.0"
+
+#: woo-email-manager.php:59
+#: woo-email-manager.php:68
+#@ woo-email-manager
+msgid "Cheatin&#8217; huh?"
+msgstr "Tricksen?"
+
+#: woo-email-manager.php:119
+#, php-format
+#@ woo-email-manager
+msgid "Please mind that the number of parameters (e.g. %s or %d) and their order included in the default texts has to match your translations - otherwise you will face errors."
+msgstr "Bitte bedenke, dass die Anzahl der Parameter (z.B. %s oder %d) und deren Reihenfolge mit dem Original-Text übereinstimmen muss - anderenfalls kommt es zu Fehlermeldungen."
+
+#: woo-email-manager.php:121
+#@ woo-email-manager
+msgid "Rescan Email Strings"
+msgstr "E-Mail Texte scannen"
+
+#: woo-email-manager.php:188
+#@ woo-email-manager
+msgid "BCC"
+msgstr "BCC"
+
+#: woo-email-manager.php:190
+#@ woo-email-manager
+msgid "Seperate multiple email addresses by comma"
+msgstr "Trenne mehrere E-Mail Adressen per Komma"
+
+#: woo-email-manager.php:202
+#, php-format
+#@ woo-email-manager
+msgid "Text %d"
+msgstr "Text %d"
+
+#: woo-email-manager.php:204
+#, php-format
+#@ woo-email-manager
+msgid "Default: %s"
+msgstr "Original: %s"
+
+#: woo-email-manager.php:204
+#@ textdomain
+msgctxt "specified"
+msgid "text"
+msgstr ""
+
+#: woo-email-manager.php:204
+#@ textdomain
+msgid "text"
+msgstr ""
+

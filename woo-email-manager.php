@@ -91,18 +91,78 @@ final class Woo_Email_Manager {
 		add_action( 'plugins_loaded', array( $this, 'load_plugin_textdomain' ) );
 		add_action( 'woocommerce_email', array( $this, 'init_email_fields' ), 10, 1 );
 		add_filter( 'woocommerce_email_headers', array( $this, 'set_email_headers' ), 10, 3 );
+		add_action( 'woocommerce_before_template_part', array( $this, 'set_filters' ), 100, 4 );
+		add_action( 'woocommerce_email_settings_after', array( $this, 'delete_transient_button' ), 10, 1 );
+		add_action( 'admin_init', array( $this, 'rescan_email_strings' ) );
+
+	}
+
+	public function rescan_email_strings() {
+
+		if( isset( $_GET[ 'rescan-email' ] ) && isset( $_GET[ '_wpnonce' ] ) && check_admin_referer( 'woo-email-manager-rescan-emails' ) ) {
+			
+			$mail = $this->get_email_instance_by_id( wc_clean( $_GET[ 'rescan-email' ] ) );
+			
+			if ( ! $mail )
+				return;
+
+			delete_transient( 'woo_email_manager_text_' . $mail->id );
+			
+		}
+
+	}
+
+	public function delete_transient_button( $mail ) {
+
+		?>
+
+			<p><?php _e( 'Please mind that the number of parameters (e.g. %s or %d) and their order included in the default texts has to match your translations - otherwise you will face errors.', 'woo-email-manager' ); ?></p>
+
+			<a class="button button-secondary" href="<?php echo wp_nonce_url( add_query_arg( array( 'rescan-email' => $mail->id ) ), 'woo-email-manager-rescan-emails' ); ?>"><?php _e( 'Rescan Email Strings', 'woo-email-manager' ); ?></a>
+
+		<?php
+
+	}
+
+	public function set_filters( $template_name, $template_path, $located, $args ) {
+
+		if ( strpos( $template_name, 'email' ) !== false && ! in_array( $template_name, array( 'emails/email-header.php', 'emails/email-footer.php' ) ) ) {
+
+			$mail = $this->get_email_instance_by_tpl( array( $template_name ) );
+			$GLOBALS[ 'woo_email_manager_current_mail' ] = $mail;
+			add_filter( 'gettext', array( $this, 'set_localization' ), 10, 3 );
+		}
+
+	}
+
+	public function set_localization( $translated, $original, $domain ) {
+
+		if ( ! isset( $GLOBALS[ 'woo_email_manager_current_mail' ] ) || ! is_object( $GLOBALS[ 'woo_email_manager_current_mail' ] ) )
+			return $translated;
+
+		$mail = $GLOBALS[ 'woo_email_manager_current_mail' ];
+
+		$text_data = $this->get_text_data( $mail );
+		
+		if ( ! empty( $text_data ) ) {
+
+			foreach ( $text_data as $text ) {
+
+				if ( $domain === $text[ 'textdomain' ] && $mail->get_option( 'text_' . md5( $original ) ) ) {
+					$translated = $mail->get_option( 'text_' . md5( $original ) );
+				}
+
+			}
+
+		}
+
+		return $translated;
 
 	}
 
 	public function set_email_headers( $headers, $id, $object ) {
 
-		$mails = WC()->mailer()->get_emails();
-		$mail = null;
-
-		foreach ( $mails as $mail_instance ) {
-			if ( $id === $mail_instance->id )
-				$mail = $mail_instance;
-		}
+		$mail = $this->get_email_instance_by_id( $id );
 
 		if ( ! $mail || ! is_object( $mail ) )
 			return $headers;
@@ -117,7 +177,9 @@ final class Woo_Email_Manager {
 	}	
 
 	public function init_email_fields( $mailer ) {		
+		
 		$mails = $mailer->get_emails();
+		
 		foreach ( $mails as $mail ) {
 
 			$gettexts = $this->get_text_data( $mail );
@@ -132,26 +194,27 @@ final class Woo_Email_Manager {
 
 			$count = 0;
 
-			foreach ( $gettexts as $gettext ) {
+			if ( ! empty( $gettexts ) ) {
 
-				$mail->form_fields[ 'text_' . md5( $gettext[ 'text' ] ) ] = array(
-					'title'         => sprintf( __( 'Text %d', 'woo-email-manager' ), ++$count ),
-					'type'          => 'textarea',
-					'description'   => sprintf( __( 'Default: %s', 'woo-email-manager' ), __( $gettext[ 'text' ], $gettext[ 'textdomain' ] ) ),
-					'placeholder'   => '',
-					'default'       => ''
-				);
+				foreach ( $gettexts as $gettext ) {
 
+					$mail->form_fields[ 'text_' . md5( $gettext[ 'text' ] ) ] = array(
+						'title'         => sprintf( __( 'Text %d', 'woo-email-manager' ), ++$count ),
+						'type'          => 'textarea',
+						'description'   => sprintf( __( 'Default: %s', 'woo-email-manager' ), ( $gettext[ 'specified' ] ? _x( $gettext[ 'text' ], $gettext[ 'specified' ], $gettext[ 'textdomain' ] ) : __( $gettext[ 'text' ], $gettext[ 'textdomain' ] ) ) ),
+						'placeholder'   => '',
+						'default'       => ''
+					);
+
+				}
 			}
-
 		}
 	}
 
 	public function get_text_data( $mail ) {
 		
-		if ( $text_data = get_transient( 'woo_email_manager_text_' . $mail->id ) ) {
+		if ( $text_data = get_transient( 'woo_email_manager_text_' . $mail->id ) )
 			return $text_data;
-		}
 
 		$template = $mail->template_html;
 		
@@ -170,18 +233,30 @@ final class Woo_Email_Manager {
 		$gettexts = array();
 
 		if ( ! empty( $content ) ) {
-			preg_match_all( "/printf\(( ?)__\(.*?\)/", $content, $matches );
+			
+			preg_match_all( '/_(_|e|x)\(.*,.?(\'|\").*(\'|\").?\)/', $content, $matches );
+
 			if ( ! empty( $matches[0] ) ) {
+
 				foreach ( $matches[0] as $string ) {
-					$string = explode( "'", $string );
-					if ( isset( $string[1] ) && isset( $string[3] ) ) {
-						$gettexts[] = array( 
-							'text' => trim( $string[1] ), 
-							'textdomain' => trim( $string[3] ), 
-						);
-					}
+					
+					$string = str_replace( '"', "'", $string );
+
+					$items = explode( "'", $string );
+
+					if ( ! isset( $items[3] ) )
+						continue;
+
+					$gettexts[] = array( 
+						'text' => trim( $items[1] ), 
+						'textdomain' => ( strpos( $string, '_x' ) !== false && isset( $items[5] ) ? trim( $items[5] ) : trim( $items[3] ) ), 
+						'specified' => ( strpos( $string, '_x' ) !== false && isset( $items[3] ) ? $items[3] : false )
+					);
+
 				}
+
 			}
+
 		}
 
 		set_transient( 'woo_email_manager_text_' . $mail->id, $gettexts, WEEK_IN_SECONDS );
@@ -248,6 +323,45 @@ final class Woo_Email_Manager {
 
 		load_textdomain( $domain, trailingslashit( WP_LANG_DIR ) . $domain . '/' . $domain . '-' . $locale . '.mo' );
 		load_plugin_textdomain( $domain, FALSE, basename( dirname( __FILE__ ) ) . '/languages/' );
+	}
+
+	private function get_email_instance_by_id( $id ) {
+
+		$mailer = WC()->mailer();
+		$mails = $mailer->get_emails();
+		
+		foreach ( $mails as $mail ) {
+			if ( $id === $mail->id )
+				return $mail;
+		}
+		
+		return false;
+	}
+
+	private function get_email_instance_by_tpl( $tpls = array() ) {
+		
+		$found_mails = array();
+		
+		foreach ( $tpls as $tpl ) {
+		
+			$tpl = apply_filters( 'woo_email_manager_email_template_name',  str_replace( array( 'admin-', '-' ), array( '', '_' ), basename( $tpl, '.php' ) ), $tpl );
+			$mails = WC()->mailer()->get_emails();
+		
+			if ( ! empty( $mails ) ) {
+		
+				foreach ( $mails as $mail ) {
+		
+					if ( $mail->id == $tpl )
+						array_push( $found_mails, $mail );
+		
+				}
+			}
+		}
+
+		if ( ! empty( $found_mails ) )
+			return $found_mails[ sizeof( $found_mails ) - 1 ];
+
+		return null;
 	}
 
 }
